@@ -1,4 +1,3 @@
-# World_layoffs_Analysis_using_SQL
 # Layoffs Analysis 2022 – SQL-Based Data Cleaning & EDA
 
 This project presents a comprehensive data cleaning and exploratory data analysis (EDA) of global layoffs using SQL. The dataset, sourced from [Kaggle](https://www.kaggle.com/datasets/swaptr/layoffs-2022), provides insights into company downsizing trends during economic uncertainty, particularly in the tech and startup ecosystem.
