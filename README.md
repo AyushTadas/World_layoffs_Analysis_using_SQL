@@ -20,99 +20,99 @@ This project presents a comprehensive data cleaning and exploratory data analysi
 
 ---
 
-## Data Cleaning (SQL)
+SQL Data Cleaning and Exploratory Data Analysis (EDA)
+This project focuses on cleaning and analyzing a dataset of company layoffs from 2022. The dataset was obtained from Kaggle and initially contained various data quality issues, including duplicate entries, inconsistent text formatting, and missing values.
 
-Performed structured data cleaning using MySQL to prepare the dataset for analysis. The process involved:
+The primary tools used for this project are SQL for all data manipulation and analysis tasks.
 
-### 1. Duplicate Detection & Removal  
-   - Used `ROW_NUMBER()` with `PARTITION BY` to identify and remove exact duplicates.
-     ```sql
-     WITH RowNumbered AS (
-         SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY Company, Date ORDER BY Date DESC) AS row_num
-         FROM layoffs_raw
-     )
-     DELETE FROM layoffs_raw
-     WHERE EXISTS (
-         SELECT 1
-         FROM RowNumbered
-         WHERE layoffs_raw.ID = RowNumbered.ID AND RowNumbered.row_num > 1
-     );
-     ```
-   - Verified edge cases (e.g., companies with similar but valid multiple entries).
+Project Goals
+Data Cleaning:
 
-### 2. Standardization of Text Fields  
-   - Removed inconsistencies in company names, industries, and countries (e.g., spacing, casing) using `TRIM()`, `UPPER()`, and `REPLACE()`.
-     ```sql
-     UPDATE layoffs_raw
-     SET Company = UPPER(TRIM(Company)),
-         Industry = UPPER(TRIM(Industry)),
-         Country = UPPER(TRIM(Country));
-     ```
+Identify and remove duplicate rows.
 
-### 3. Null Value Analysis & Handling  
-   - Checked for null values and removed rows with missing values where analysis was not possible.
-     ```sql
-     DELETE FROM layoffs_raw
-     WHERE Total_Laid_Off IS NULL OR Date IS NULL OR Industry IS NULL;
-     ```
+Standardize text data to ensure consistency (e.g., correcting spelling, handling different formats).
 
-### 4. Data Staging Strategy  
-   - Created a dedicated staging table (`layoffs_staging`) to ensure raw data remains untouched for future reference.
-     ```sql
-     CREATE TABLE layoffs_staging AS
-     SELECT * FROM layoffs_raw;
-     ```
+Handle missing or null values appropriately.
 
----
+Remove any unnecessary rows or columns.
 
-## Exploratory Data Analysis (SQL)
+Exploratory Data Analysis (EDA):
 
-Following the cleaning phase, a series of analytical SQL queries were executed to extract key trends and business insights:
+Analyze trends in layoffs by company, industry, country, and location.
 
-### Key Analyses Conducted
+Identify the companies with the largest total layoffs.
 
-- **Top Companies by Total Layoffs**
-  ```sql
-  SELECT Company, SUM(Total_Laid_Off) AS Total_Layoffs
-  FROM layoffs_raw
-  GROUP BY Company
-  ORDER BY Total_Layoffs DESC
-  LIMIT 10;
+Examine the highest percentages of layoffs to find companies that were completely shut down.
 
-- **Highest Single event Layoffs**
-  ```sql
-  SELECT Company, Total_Laid_Off, Date
-  FROM layoffs_raw
-  ORDER BY Total_Laid_Off DESC
-  LIMIT 1;
-  
--**Countries with 100% workforce layoffs**
-```sql
-SELECT Company, Date, Total_Laid_Off
-FROM layoffs_raw
-WHERE Percentage_Laid_Off = 100;
+Calculate rolling totals of layoffs over time to understand the overall trend.
 
--**Layoff by country,Location and Industry**
-```sql
-SELECT Country, Industry, SUM(Total_Laid_Off) AS Total_Layoffs
-FROM layoffs_raw
-GROUP BY Country, Industry
-ORDER BY Total_Layoffs DESC;
+Data Cleaning Process
+The data cleaning process was structured into four key steps:
 
--**Funding vs Layoff Corelation**
-sql```
-SELECT Funding_Stage, SUM(Total_Laid_Off) AS Total_Layoffs
-FROM layoffs_raw
-GROUP BY Funding_Stage
-ORDER BY Total_Layoffs DESC;
+Removing Duplicates: A staging table was created to work with the data without altering the original table. Using a ROW_NUMBER() window function partitioned by key columns, duplicate rows were identified and then removed from the staging table.
 
--**Layoff Trends by Year**
-```sql
-SELECT YEAR(Date) AS Year, SUM(Total_Laid_Off) AS Total_Layoffs
-FROM layoffs_raw
-GROUP BY Year
-ORDER BY Year;
+Standardizing Data: Various standardization tasks were performed:
+
+Leading and trailing spaces were removed.
+
+Text inconsistencies, such as Crypto Currency and CryptoCurrency, were consolidated to a single format (Crypto).
+
+The date column was converted from a string to a proper DATE data type for easier manipulation and time-based analysis.
+
+Handling Null Values: Null values in the industry column were addressed by cross-referencing company names with other entries in the dataset to fill in missing information where possible. Null values in columns like total_laid_off and percentage_laid_off were kept as they were, as they represent meaningful missing data that would be useful for specific queries later on.
+
+Removing Unnecessary Data: Rows where both total_laid_off and percentage_laid_off were NULL were removed, as they provided no useful information for analysis. A temporary row_num column, which was created during the duplicate removal step, was dropped to finalize the cleaned table.
+
+Key Findings from EDA
+The company with the highest number of layoffs was Amazon.
+
+Some startups had a 100% layoff rate (percentage_laid_off = 1), indicating they completely shut down.
+
+The Consumer and Retail industries were among the most affected.
+
+The data showed that layoffs were not always directly correlated with a company's funding, with some highly-funded companies still experiencing massive layoffs.
+
+This project provides a robust framework for cleaning and analyzing similar datasets using SQL, transforming raw data into a clean, usable format for insightful analysis.
+
+SQL Queries
+Here are some of the key SQL queries used in this project.
+
+Finding Duplicates
+This query identifies duplicate rows based on multiple columns, assigning a row number to each partition. Duplicates will have a row_num greater than 1.
+
+SELECT *,
+		ROW_NUMBER() OVER (
+			PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions
+			) AS row_num
+FROM world_layoffs.layoffs_staging2;
+
+Standardizing Country Data
+This query standardizes the country column by removing trailing periods.
+
+UPDATE layoffs_staging2
+SET country = TRIM(TRAILING '.' FROM country);
+
+Top 10 Companies with the Most Layoffs
+This query aggregates the total number of laid-off employees for each company and orders the results to show the top 10.
+
+SELECT company, SUM(total_laid_off) AS total_layoffs
+FROM world_layoffs.layoffs_staging2
+GROUP BY company
+ORDER BY 2 DESC
+LIMIT 10;
+
+Calculating Rolling Total Layoffs by Month
+This query calculates the cumulative sum of layoffs over time, providing a clear trend of the total number of layoffs month by month.
+
+WITH DATE_CTE AS (
+    SELECT SUBSTRING(date, 1, 7) as dates, SUM(total_laid_off) AS total_laid_off
+    FROM layoffs_staging2
+    GROUP BY dates
+)
+SELECT dates, SUM(total_laid_off) OVER (ORDER BY dates ASC) as rolling_total_layoffs
+FROM DATE_CTE
+ORDER BY dates ASC;
+
 
 ## Key Insights & Observations
 
