@@ -25,7 +25,9 @@ This project focuses on cleaning and analyzing a dataset of company layoffs from
 
 The primary tools used for this project are SQL for all data manipulation and analysis tasks.
 
-Project Goals
+Project Goals-
+1. Data Cleaning
+2. Exploratory Data Analysis
 
 ## Data Cleaning:
 
