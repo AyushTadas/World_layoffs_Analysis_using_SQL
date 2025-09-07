@@ -26,7 +26,8 @@ This project focuses on cleaning and analyzing a dataset of company layoffs from
 The primary tools used for this project are SQL for all data manipulation and analysis tasks.
 
 Project Goals
-Data Cleaning:
+
+## Data Cleaning:
 
 Identify and remove duplicate rows.
 
@@ -36,7 +37,7 @@ Handle missing or null values appropriately.
 
 Remove any unnecessary rows or columns.
 
-Exploratory Data Analysis (EDA):
+## Exploratory Data Analysis (EDA):
 
 Analyze trends in layoffs by company, industry, country, and location.
 
@@ -46,12 +47,12 @@ Examine the highest percentages of layoffs to find companies that were completel
 
 Calculate rolling totals of layoffs over time to understand the overall trend.
 
-Data Cleaning Process
+## Data Cleaning Process
 The data cleaning process was structured into four key steps:
 
-Removing Duplicates: A staging table was created to work with the data without altering the original table. Using a ROW_NUMBER() window function partitioned by key columns, duplicate rows were identified and then removed from the staging table.
+**Removing Duplicates**: A staging table was created to work with the data without altering the original table. Using a ROW_NUMBER() window function partitioned by key columns, duplicate rows were identified and then removed from the staging table.
 
-Standardizing Data: Various standardization tasks were performed:
+**Standardizing Data**: Various standardization tasks were performed:
 
 Leading and trailing spaces were removed.
 
@@ -59,11 +60,11 @@ Text inconsistencies, such as Crypto Currency and CryptoCurrency, were consolida
 
 The date column was converted from a string to a proper DATE data type for easier manipulation and time-based analysis.
 
-Handling Null Values: Null values in the industry column were addressed by cross-referencing company names with other entries in the dataset to fill in missing information where possible. Null values in columns like total_laid_off and percentage_laid_off were kept as they were, as they represent meaningful missing data that would be useful for specific queries later on.
+**Handling Null Values**: Null values in the industry column were addressed by cross-referencing company names with other entries in the dataset to fill in missing information where possible. Null values in columns like total_laid_off and percentage_laid_off were kept as they were, as they represent meaningful missing data that would be useful for specific queries later on.
 
-Removing Unnecessary Data: Rows where both total_laid_off and percentage_laid_off were NULL were removed, as they provided no useful information for analysis. A temporary row_num column, which was created during the duplicate removal step, was dropped to finalize the cleaned table.
+**Removing Unnecessary Data**: Rows where both total_laid_off and percentage_laid_off were NULL were removed, as they provided no useful information for analysis. A temporary row_num column, which was created during the duplicate removal step, was dropped to finalize the cleaned table.
 
-Key Findings from EDA
+## Key Findings from EDA
 The company with the highest number of layoffs was Amazon.
 
 Some startups had a 100% layoff rate (percentage_laid_off = 1), indicating they completely shut down.
