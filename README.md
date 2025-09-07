@@ -75,10 +75,10 @@ The data showed that layoffs were not always directly correlated with a company'
 
 This project provides a robust framework for cleaning and analyzing similar datasets using SQL, transforming raw data into a clean, usable format for insightful analysis.
 
-SQL Queries
+## SQL Queries
 Here are some of the key SQL queries used in this project.
 
-Finding Duplicates
+**Finding Duplicates**
 This query identifies duplicate rows based on multiple columns, assigning a row number to each partition. Duplicates will have a row_num greater than 1.
 
 SELECT *,
@@ -87,13 +87,13 @@ SELECT *,
 			) AS row_num
 FROM world_layoffs.layoffs_staging2;
 
-Standardizing Country Data
+**Standardizing Country Data**
 This query standardizes the country column by removing trailing periods.
 
 UPDATE layoffs_staging2
 SET country = TRIM(TRAILING '.' FROM country);
 
-Top 10 Companies with the Most Layoffs
+**Top 10 Companies with the Most Layoffs**
 This query aggregates the total number of laid-off employees for each company and orders the results to show the top 10.
 
 SELECT company, SUM(total_laid_off) AS total_layoffs
@@ -102,7 +102,7 @@ GROUP BY company
 ORDER BY 2 DESC
 LIMIT 10;
 
-Calculating Rolling Total Layoffs by Month
+**Calculating Rolling Total Layoffs by Month**
 This query calculates the cumulative sum of layoffs over time, providing a clear trend of the total number of layoffs month by month.
 
 WITH DATE_CTE AS (
