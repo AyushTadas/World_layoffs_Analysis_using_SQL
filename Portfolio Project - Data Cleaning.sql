@@ -24,7 +24,7 @@ SELECT * FROM world_layoffs.layoffs;
 -- 1. check for duplicates and remove any
 -- 2. standardize data and fix errors
 -- 3. Look at null values and see what 
--- 4. remove any columns and rows that are not necessary - few ways
+-- 4. remove any columns and rows that are not necessary 
 
 
 
@@ -46,26 +46,7 @@ SELECT company, industry, total_laid_off,`date`,
 
 
 
-SELECT *
-FROM (
-	SELECT company, industry, total_laid_off,`date`,
-		ROW_NUMBER() OVER (
-			PARTITION BY company, industry, total_laid_off,`date`
-			) AS row_num
-	FROM 
-		world_layoffs.layoffs_staging
-) duplicates
-WHERE 
-	row_num > 1;
-    
--- let's just look at oda to confirm
-SELECT *
-FROM world_layoffs.layoffs_staging
-WHERE company = 'Oda'
-;
--- it looks like these are all legitimate entries and shouldn't be deleted. We need to really look at every single row to be accurate
-
--- these are our real duplicates 
+-- these are our duplicates 
 SELECT *
 FROM (
 	SELECT company, location, industry, total_laid_off,percentage_laid_off,`date`, stage, country, funds_raised_millions,
@@ -78,41 +59,11 @@ FROM (
 WHERE 
 	row_num > 1;
 
--- these are the ones we want to delete where the row number is > 1 or 2or greater essentially
-
--- now you may want to write it like this:
-WITH DELETE_CTE AS 
-(
-SELECT *
-FROM (
-	SELECT company, location, industry, total_laid_off,percentage_laid_off,`date`, stage, country, funds_raised_millions,
-		ROW_NUMBER() OVER (
-			PARTITION BY company, location, industry, total_laid_off,percentage_laid_off,`date`, stage, country, funds_raised_millions
-			) AS row_num
-	FROM 
-		world_layoffs.layoffs_staging
-) duplicates
-WHERE 
-	row_num > 1
-)
-DELETE
-FROM DELETE_CTE
-;
+-- these are the ones we want to delete where the row number is > 1 or 2 or greater essentially
 
 
-WITH DELETE_CTE AS (
-	SELECT company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions, 
-    ROW_NUMBER() OVER (PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num
-	FROM world_layoffs.layoffs_staging
-)
-DELETE FROM world_layoffs.layoffs_staging
-WHERE (company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions, row_num) IN (
-	SELECT company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions, row_num
-	FROM DELETE_CTE
-) AND row_num > 1;
 
--- one solution, which I think is a good one. Is to create a new column and add those row numbers in. Then delete where row numbers are over 2, then delete that column
--- so let's do it!!
+-- one solution, is to create a new column and add those row numbers in. Then delete where row numbers are over 2, then delete that column.
 
 ALTER TABLE world_layoffs.layoffs_staging ADD row_num INT;
 
@@ -197,7 +148,7 @@ FROM world_layoffs.layoffs_staging2
 WHERE company LIKE 'airbnb%';
 
 -- it looks like airbnb is a travel, but this one just isn't populated.
--- I'm sure it's the same for the others. What we can do is
+-- it's might be the same for the others. What we can do is
 -- write a query that if there is another row with the same company name, it will update it to the non-null industry values
 -- makes it easy so if there were thousands we wouldn't have to manually check them all
 
@@ -232,7 +183,7 @@ ORDER BY industry;
 
 -- ---------------------------------------------------
 
--- I also noticed the Crypto has multiple different variations. We need to standardize that - let's say all to Crypto
+-- I also noticed the Crypto has multiple different variations. We need to standardize that - let's set all to Crypto
 SELECT DISTINCT industry
 FROM world_layoffs.layoffs_staging2
 ORDER BY industry;
@@ -241,7 +192,7 @@ UPDATE layoffs_staging2
 SET industry = 'Crypto'
 WHERE industry IN ('Crypto Currency', 'CryptoCurrency');
 
--- now that's taken care of:
+-- now :
 SELECT DISTINCT industry
 FROM world_layoffs.layoffs_staging2
 ORDER BY industry;
@@ -252,7 +203,7 @@ ORDER BY industry;
 SELECT *
 FROM world_layoffs.layoffs_staging2;
 
--- everything looks good except apparently we have some "United States" and some "United States." with a period at the end. Let's standardize this.
+-- everything looks good except  we have some "United States" and some "United States." with a period at the end. Let's standardize this.
 SELECT DISTINCT country
 FROM world_layoffs.layoffs_staging2
 ORDER BY country;
